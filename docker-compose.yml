@@ -1,39 +1,74 @@
+version: '3.2'
 services:
-    #redis
-    #nginx
-    #https?
-    #MySQL
-    db:
-        image: mysql:5.7
-        volumes:
-        #Agregar nombre de usuario 
-        - /home/<usuario>/wp_site/mysql:/var/lib/mysql
-        restart: always
-        environment: 
-            MYSQL_ROOT_PASSWORD: password
-            MYSQL_DATABASE: wordpress
-            MYSQL_USER: wordpress
-            MYSQL_PASSWORD: wordpress
-        networks:
-        - wpsite_net
 
-    #Wordpress 1
-    
-    wordpress_1:
-        image: wordpress
-        ports:
-            - 8080:80
-        restart: always
-        volumes: ['./:/var/www/html']
-        environment:
-            WORDPRESS_DB_HOST: db
-            WORDPRESS_DB_USER: wordpress
-            WORDPRESS_DB_PASSWORD: wordpress
-            WORDPRESS_DB_NAME: wordpress
-        networks:
-            - wpsite_net
+#Load Balancer
+ nginx:
+   image: jwilder/nginx-proxy
+   volumes:
+     - /var/run/docker.sock:/tmp/docker.sock:ro
+   ports:
+     - 80:80
+     - 443:443
+       #  environment:
+       #    - NGINX_HOST=192.168.1.109
+       #    - S1_PORT=8080
+       #    - S2_PORT=8081
+   networks:
+     - wpsite
+
+#Database
+ db:
+   image: mysql:5.7
+   volumes:
+     - /home/jmbw/wp_site/mysql:/var/lib/mysql
+   restart: always
+   environment:
+     MYSQL_ROOT_PASSWORD: password
+     MYSQL_DATABASE: wordpress
+     MYSQL_USER: wordpress
+     MYSQL_PASSWORD: wordpress
+   networks:
+     - wpsite
+
+#Wordpress2
+ wordpress_1:
+   image: wordpress
+   restart: always
+   ports: 
+     - 8081:80
+   volumes: 
+     - ./:/var/www/html
+   expose:
+     - 80
+   environment:
+     WORDPRESS_DB_HOST: db
+     WORDPRESS_DB_USER: wordpress
+     WORDPRESS_DB_PASSWORD: wordpress
+     WORDPRESS_DB_NAME: wordpress
+     VIRTUAL_HOST: parcial1.local
+   networks:
+     - wpsite
+
+#Wordpress2
+ wordpress_2:
+   image: wordpress
+   restart: always
+   ports: 
+     - 8080:80 
+   volumes: 
+     - ./:/var/www/html
+   expose:
+     - 80
+   environment:
+     WORDPRESS_DB_HOST: db
+     WORDPRESS_DB_USER: wordpress
+     WORDPRESS_DB_PASSWORD: wordpress
+     WORDPRESS_DB_NAME: wordpress
+     VIRTUAL_HOST: parcial1.local
+   networks:
+     - wpsite
 
 networks:
-    wpsite_net:
-            
-    
+  wpsite:
+
+ 
