@@ -1,26 +1,39 @@
-version: '3.2'
+version: '2'
 services:
 
+   
 #Load Balancer
  nginx:
    image: jwilder/nginx-proxy
    volumes:
      - /var/run/docker.sock:/tmp/docker.sock:ro
+       # - ./proxy/nginx.conf:/etc/nginx/conf.d/parcial1.eastus.cloudapp.azure.com.conf:ro
+     - ./certs:/etc/nginx/certs
+     - /etc/nginx/vhost.d
+     - /usr/share/nginx/html  
    ports:
      - 80:80
      - 443:443
-       #  environment:
-       #    - NGINX_HOST=192.168.1.109
-       #    - S1_PORT=8080
-       #    - S2_PORT=8081
    networks:
      - wpsite
+   labels:
+     - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy      
+
+#SSL
+ letsencrypt:
+   image: jrcs/letsencrypt-nginx-proxy-companion
+   restart: always
+   volumes:
+     - ./certs:/etc/nginx/certs:rw
+     - /var/run/docker.sock:/var/run/docker.sock:ro
+   volumes_from:
+     - nginx:rw    
 
 #Database
  db:
    image: mysql:5.7
    volumes:
-     - /home/jmbw/wp_site/mysql:/var/lib/mysql
+     - ./mysql:/var/lib/mysql
    restart: always
    environment:
      MYSQL_ROOT_PASSWORD: password
@@ -30,7 +43,7 @@ services:
    networks:
      - wpsite
 
-#Wordpress2
+#Wordpress1
  wordpress_1:
    image: wordpress
    restart: always
@@ -45,7 +58,8 @@ services:
      WORDPRESS_DB_USER: wordpress
      WORDPRESS_DB_PASSWORD: wordpress
      WORDPRESS_DB_NAME: wordpress
-     VIRTUAL_HOST: parcial1.local
+     VIRTUAL_HOST: parcial1.eastus.cloudapp.azure.com
+     LETSENCRYPT_HOST: parcial1.eastus.cloudapp.azure.com 
    networks:
      - wpsite
 
@@ -64,7 +78,8 @@ services:
      WORDPRESS_DB_USER: wordpress
      WORDPRESS_DB_PASSWORD: wordpress
      WORDPRESS_DB_NAME: wordpress
-     VIRTUAL_HOST: parcial1.local
+     VIRTUAL_HOST: parcial1.eastus.cloudapp.azure.com
+     LETSENCRYPT_HOST: parcial1.eastus.cloudapp.azure.com
    networks:
      - wpsite
 
